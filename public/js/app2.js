@@ -10168,7 +10168,7 @@ var TheDivision = function (_React$Component) {
         var _this = _possibleConstructorReturn(this, (TheDivision.__proto__ || Object.getPrototypeOf(TheDivision)).call(this, props));
 
         _this.state = {
-            taskData: _this.props.taskData,
+            taskData: [],
             NewTaskInputTxt: '',
             EditId: -1
         };
@@ -10176,12 +10176,26 @@ var TheDivision = function (_React$Component) {
         _this.handleNewTaskSubmit = _this.handleNewTaskSubmit.bind(_this);
         _this.handleDelete = _this.handleDelete.bind(_this);
         _this.handleStartEdit = _this.handleStartEdit.bind(_this);
-        _this.handleOnEditChange = _this.handleOnEditChange.bind(_this);
-
+        _this.handleOnEdit = _this.handleOnEdit.bind(_this);
         return _this;
     }
 
     _createClass(TheDivision, [{
+        key: 'componentDidMount',
+        value: function componentDidMount() {
+            this.refreshData();
+        }
+    }, {
+        key: 'refreshData',
+        value: function refreshData() {
+            var self = this; // self = this because within new function it's think this mean new function not TheDivision
+            __WEBPACK_IMPORTED_MODULE_2_axios___default.a.get('/getData').then(function (response) {
+                self.setState({
+                    taskData: response.data.tasks
+                });
+            });
+        }
+    }, {
         key: 'handleNewTaskInput',
         value: function handleNewTaskInput(e) {
             this.setState({
@@ -10191,26 +10205,20 @@ var TheDivision = function (_React$Component) {
     }, {
         key: 'handleNewTaskSubmit',
         value: function handleNewTaskSubmit(e) {
-            var temp = this.state.taskData;
-            temp.push({ id: nextID, task: this.state.NewTaskInputTxt });
-            this.setState({
-                taskData: temp
+            var self = this;
+            __WEBPACK_IMPORTED_MODULE_2_axios___default.a.post('/task', {
+                name: this.state.NewTaskInputTxt
+            }).then(function () {
+                self.refreshData();
             });
-            nextID = nextID + 1;
+            this.setState({ NewTaskInputTxt: '' });
         }
     }, {
         key: 'handleDelete',
         value: function handleDelete(e) {
-            var temp = this.state.taskData;
-            var index = temp.findIndex(function (arr) {
-                return arr.id == e;
-            });
-            temp.splice(index, 1);
-            this.setState({
-                taskData: temp
-            });
-            if (this.state.EditId === e) this.setState({
-                EditId: -1
+            var self = this;
+            __WEBPACK_IMPORTED_MODULE_2_axios___default.a.delete('/task/' + e).then(function () {
+                self.refreshData();
             });
         }
     }, {
@@ -10221,12 +10229,16 @@ var TheDivision = function (_React$Component) {
             });
         }
     }, {
-        key: 'handleOnEditChange',
-        value: function handleOnEditChange(e) {
-            var temp = taskData;
-            temp[getIndex(this.state.EditId, temp)] = { id: this.state.EditId, task: e };
+        key: 'handleOnEdit',
+        value: function handleOnEdit(e) {
+            var self = this;
+            __WEBPACK_IMPORTED_MODULE_2_axios___default.a.post('/task/' + this.state.EditId + '/edited', {
+                editedName: e
+            }).then(function () {
+                self.refreshData();
+            });
             this.setState({
-                taskData: temp
+                EditId: -1
             });
         }
     }, {
@@ -10241,12 +10253,12 @@ var TheDivision = function (_React$Component) {
                     onChangeNewTaskInput: this.handleNewTaskInput,
                     onSubmitNewTask: this.handleNewTaskSubmit
                 }),
-                __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(CurrentTask, {
+                this.state.taskData.length !== 0 && __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(CurrentTask, {
                     taskData: this.state.taskData,
                     onDelete: this.handleDelete,
                     onStartEdit: this.handleStartEdit
                 }),
-                this.state.EditId !== -1 && __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(EditTask, { EditId: this.state.EditId, taskData: this.state.taskData, handleOnEditChange: this.handleOnEditChange })
+                this.state.EditId !== -1 && __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(EditTask, { EditId: this.state.EditId, taskData: this.state.taskData, handleOnEdit: this.handleOnEdit })
             );
         }
     }]);
@@ -10256,7 +10268,7 @@ var TheDivision = function (_React$Component) {
 
 function getIndex(value, arr) {
     for (var i = 0; i < arr.length; i++) {
-        // best function ever!
+        // one day i'll use lodash instead
         if (arr[i].id === value) {
             return i;
         }
@@ -10386,9 +10398,6 @@ var CurrentTask = function (_React$Component3) {
             var _this4 = this;
 
             var renderTask = [];
-            if (this.props.taskData.length === 0) {
-                return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement('div', null);
-            }
             this.props.taskData.map(function (onetask) {
                 return renderTask.push(__WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
                     'tr',
@@ -10399,7 +10408,7 @@ var CurrentTask = function (_React$Component3) {
                         __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
                             'div',
                             null,
-                            onetask.task
+                            onetask.name
                         )
                     ),
                     __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
@@ -10553,14 +10562,14 @@ var EditTask = function (_React$Component6) {
 
         var _this7 = _possibleConstructorReturn(this, (EditTask.__proto__ || Object.getPrototypeOf(EditTask)).call(this, props));
 
-        _this7.handleOnEditChange = _this7.handleOnEditChange.bind(_this7);
+        _this7.handleOnEdit = _this7.handleOnEdit.bind(_this7);
         return _this7;
     }
 
     _createClass(EditTask, [{
-        key: 'handleOnEditChange',
-        value: function handleOnEditChange(e) {
-            this.props.handleOnEditChange(e.target.value);
+        key: 'handleOnEdit',
+        value: function handleOnEdit(e) {
+            this.props.handleOnEdit(e.target.value);
         }
     }, {
         key: 'render',
@@ -10579,7 +10588,8 @@ var EditTask = function (_React$Component6) {
                     __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
                         'div',
                         { className: 'panel-body' },
-                        'Task :',
+                        'Task : ',
+                        this.props.taskData[getIndex(this.props.EditId, this.props.taskData)].name,
                         __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
                             'form',
                             { className: 'form-horizontal' },
@@ -10589,7 +10599,7 @@ var EditTask = function (_React$Component6) {
                                 __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
                                     'div',
                                     { className: 'form-group' },
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement('input', { type: 'text', onChange: this.handleOnEditChange, value: this.props.taskData[getIndex(this.props.EditId, this.props.taskData)].task, className: 'form-control' })
+                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement('input', { type: 'text', onBlur: this.handleOnEdit, className: 'form-control' })
                                 )
                             )
                         )
@@ -10602,11 +10612,7 @@ var EditTask = function (_React$Component6) {
     return EditTask;
 }(__WEBPACK_IMPORTED_MODULE_0_react___default.a.Component);
 
-var taskData = [{ id: 1, task: "first taska" }, { id: 2, task: "second task" }, { id: 3, task: "third task" }];
-
-var nextID = 4;
-
-__WEBPACK_IMPORTED_MODULE_1_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(TheDivision, { taskData: taskData }), document.getElementById('TheDivision'));
+__WEBPACK_IMPORTED_MODULE_1_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(TheDivision, null), document.getElementById('TheDivision'));
 
 /***/ }),
 /* 88 */

@@ -10,9 +10,19 @@ use App\Task;
 class TaskController extends Controller
 {
 	public function index(){
-	    $tasks = task::orderBy('created_at', 'asc')->get();
+	    $tasks = Task::orderBy('created_at', 'asc')->get();
 	    return view('tasks', compact('tasks'));
+	    
 	}
+
+	public function getData(){
+		$tasks = Task::orderBy('created_at', 'asc')->get();
+		return response()->json([
+	    	'tasks' => $tasks
+    	]);
+	}
+
+
 
 
 	public function newTask(Request $request){
@@ -25,31 +35,28 @@ class TaskController extends Controller
 	            ->withErrors($validator);
 	    }
 
-	    $task = new task;
+	    $task = new Task;
 	    $task->name = $request->name;
 	    $task->save();
-
-	    return redirect('/');
 	}
 
 
 
 
-	public function delete(task $task) {
+	public function delete(Task $task) {
     	$task->delete();
-    	return redirect('/');
 	}
 
 
-	public function startEdit(task $task) {
+	public function startEdit(Task $task) {
 		$etask = $task;
-    	$tasks = task::orderBy('created_at', 'asc')->get();
+    	$tasks = Task::orderBy('created_at', 'asc')->get();
     	return view('edit',compact('etask','tasks'));	
     }
 
 
 
-	public function edit(Request $request,task $task){
+	public function edit(Request $request,Task $task){
 		$validator = Validator::make($request->all(), [
 	        'editedName' => 'required|max:255',
 	    ]);
@@ -61,7 +68,6 @@ class TaskController extends Controller
 
 	    $task->name = $request->editedName;
 	    $task->save();
-	    return redirect('/');
 
 	}
 

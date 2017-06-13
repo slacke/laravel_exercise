@@ -1,21 +1,19 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+
+/*    i'll mix laravel and react project so i might be confuse
+
+	  because i've short-term memory i have something to reference when i forgot
+     */
+
 
 
 Route::get('/',function(){
 	return view('react');
 });
 
+
+Route::get('/getData','TaskController@getData');
 
 
 /*

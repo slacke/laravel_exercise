@@ -1,12 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import axios from 'axios';
 
 
 class TheDivision extends React.Component{
     constructor(props){
         super(props);
         this.state = {
-            taskData: this.props.taskData ,
+            taskData: [] ,
             NewTaskInputTxt : '',
             EditId:-1
         };
@@ -14,30 +15,42 @@ class TheDivision extends React.Component{
         this.handleNewTaskSubmit = this.handleNewTaskSubmit.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
         this.handleStartEdit = this.handleStartEdit.bind(this);
-        this.handleOnEditChange = this.handleOnEditChange.bind(this);
-
+        this.handleOnEdit = this.handleOnEdit.bind(this);
     }
 
+
+    componentDidMount(){                        
+         this.refreshData();
+    }
+
+    refreshData(){
+        var self = this;                                            // self = this because within new function it's think this mean new function not TheDivision
+        axios.get('/getData').then(function(response){
+                                        self.setState({
+                                            taskData: response.data.tasks
+                                        });
+                                    });
+    }
     handleNewTaskInput(e){
         this.setState({
             NewTaskInputTxt : e
         });
     }
     handleNewTaskSubmit(e){
-        var temp = this.state.taskData;
-        temp.push({ id:nextID,task:this.state.NewTaskInputTxt });
-        this.setState({
-            taskData : temp
-        });
-        nextID=nextID+1;
+        var self = this;
+        axios.post('/task', {
+            name: this.state.NewTaskInputTxt
+            }).then(function(){
+                self.refreshData();
+                }
+        );
+        this.setState({NewTaskInputTxt:''}); 
     }
     handleDelete(e){
-        var temp = this.state.taskData;
-        var index = temp.findIndex(arr => arr.id == e);
-        temp.splice(index, 1);
-        this.setState({
-            taskData: temp
-        });
+        var self = this;
+        axios.delete('/task/'+e).then(function(){
+                                        self.refreshData();
+                                    });
     }
 
     handleStartEdit(e){
@@ -46,14 +59,20 @@ class TheDivision extends React.Component{
         });
     }
 
-    handleOnEditChange(e){
-        var temp = taskData;
-        temp[getIndex(this.state.EditId,temp)] = {      id: this.state.EditId,            task:e}
+    handleOnEdit(e){
+        var self = this;
+        axios.post('/task/'+this.state.EditId+'/edited',{
+            editedName: e
+        }).then(function(){
+                self.refreshData();
+                }
+        );
         this.setState({
-            taskData : temp
+            EditId : -1
         });
-
     }
+
+
 
     render(){
     return(
@@ -64,12 +83,12 @@ class TheDivision extends React.Component{
                 onChangeNewTaskInput={this.handleNewTaskInput}
                 onSubmitNewTask={this.handleNewTaskSubmit}
             />
-            <CurrentTask 
+            { this.state.taskData.length !== 0 && <CurrentTask 
                 taskData={this.state.taskData}
                 onDelete={this.handleDelete}
                 onStartEdit={this.handleStartEdit}
-            />
-            {this.state.EditId!== -1 && <EditTask EditId = {this.state.EditId} taskData={this.state.taskData} handleOnEditChange={this.handleOnEditChange}/>}
+            />}
+            {this.state.EditId!== -1 && <EditTask EditId = {this.state.EditId} taskData={this.state.taskData} handleOnEdit={this.handleOnEdit}/>}
             </div>
         );
     }
@@ -77,7 +96,7 @@ class TheDivision extends React.Component{
 
 
 function getIndex(value,arr) {
-    for(var i = 0; i < arr.length; i++) {           // best function ever!
+    for(var i = 0; i < arr.length; i++) {           // one day i'll use lodash instead
         if(arr[i].id === value) {
             return i;
         }
@@ -148,12 +167,11 @@ class NewTask extends React.Component{
 class CurrentTask extends React.Component{
     render() {
         var renderTask= [];
-        if(this.props.taskData.length === 0){return <div></div>;}
         this.props.taskData.map(    (onetask) =>
             renderTask.push(
                                     <tr key={onetask.id}>
                                         <td className="table-text">
-                                            <div>{onetask.task}</div>
+                                            <div>{onetask.name}</div>
                                         </td>
                                         <td><div><DeleteButton onDelete = {this.props.onDelete} id={onetask.id} /></div> <div><EditButton onStartEdit={this.props.onStartEdit} id={onetask.id}/></div>  </td>
                                     </tr>
@@ -227,10 +245,10 @@ class EditButton extends React.Component{
 class EditTask extends React.Component{
     constructor(props){
         super(props);
-        this.handleOnEditChange = this.handleOnEditChange.bind(this);
+        this.handleOnEdit = this.handleOnEdit.bind(this);
     } 
-    handleOnEditChange(e){
-        this.props.handleOnEditChange(e.target.value);
+    handleOnEdit(e){
+        this.props.handleOnEdit(e.target.value);
     }
     render(){
         return(
@@ -238,11 +256,11 @@ class EditTask extends React.Component{
                 <div className="panel panel-default">           
                     <div className="panel-heading">Edit Task</div>
                     <div className="panel-body">
-                        Task : 
+                        Task : {this.props.taskData[getIndex(this.props.EditId,this.props.taskData)].name}          
                         <form className="form-horizontal">
                             <div className="col-sm-12">
                                 <div className="form-group">
-                                    <input type="text" onChange={this.handleOnEditChange} value={  this.props.taskData[getIndex(this.props.EditId,this.props.taskData)].task} className="form-control" />
+                                    <input type="text" onBlur={this.handleOnEdit} className="form-control" />
                                 </div>
                             </div>
                         </form>
@@ -255,15 +273,7 @@ class EditTask extends React.Component{
 }
 
 
-var taskData = [
-                {id:1,task:"first task"},
-                {id:2,task:"second task"},
-                {id:3,task:"third task"}
-                ];
-
-var nextID = 4;
-
 ReactDOM.render(
-    <TheDivision taskData = {taskData}/>,
+    <TheDivision />,
   document.getElementById('TheDivision')
 );
