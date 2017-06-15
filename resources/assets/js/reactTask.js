@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
-
+// i'll divide it to piece once i have something to do with this again
 
 class TheDivision extends React.Component{
     constructor(props){

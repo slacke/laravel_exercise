@@ -9,7 +9,7 @@
 
 
 Route::get('/',function(){
-	return view('react');
+	return view('redux');
 });
 
 

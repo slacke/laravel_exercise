@@ -4,5 +4,10 @@
   "/js/core.js": "/js/core.js",
   "/js/core2.js": "/js/core2.js",
   "/js/core3.js": "/js/core3.js",
-  "/js/app2.js": "/js/app2.js"
+  "/js/app2.js": "/js/app2.js",
+  "/js/root.js": "/js/root.js",
+  "/js/root1.js": "/js/root1.js",
+  "/js/test.js": "/js/test.js",
+  "/js/domRender.js": "/js/domRender.js",
+  "/js/domRender1.js": "/js/domRender1.js"
 }
